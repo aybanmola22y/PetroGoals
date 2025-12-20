@@ -24,6 +24,14 @@ export default function LoginPage() {
   const [showLoadingScreen, setShowLoadingScreen] = React.useState(false)
 
   React.useEffect(() => {
+    // Check if user is already authenticated
+    const authToken = typeof window !== "undefined" ? localStorage.getItem("user") : null
+    if (authToken) {
+      // Redirect to dashboard if already logged in
+      router.push("/dashboard")
+      return
+    }
+
     setSupabaseConnected(isConnected())
     store.initialize().then(() => {
       setStoreInitialized(true)
@@ -82,7 +90,7 @@ export default function LoginPage() {
               <Target className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">PetroGoals</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">PetroGoal OKR</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Track objectives and key results across your organization
           </p>
