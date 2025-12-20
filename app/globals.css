@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 217 33% 17%;
+    --card: 0 0% 98%;
+    --card-foreground: 217 33% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 33% 17%;
+    --primary: 217 91% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 14% 93%;
+    --secondary-foreground: 217 33% 17%;
+    --muted: 217 14% 93%;
+    --muted-foreground: 217 15% 45%;
+    --accent: 217 14% 93%;
+    --accent-foreground: 217 33% 17%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 14% 89%;
+    --input: 217 14% 89%;
+    --ring: 217 91% 35%;
+    --radius: 0.5rem;
+    --sidebar: 0 0% 96%;
+    --sidebar-foreground: 217 33% 17%;
+    --sidebar-border: 217 14% 89%;
+    --sidebar-accent: 217 14% 93%;
+    --sidebar-accent-foreground: 217 33% 17%;
+    --sidebar-ring: 217 91% 35%;
+    --chart-1: 217 91% 35%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 71% 52%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 217 33% 8%;
+    --foreground: 217 14% 95%;
+    --card: 217 33% 12%;
+    --card-foreground: 217 14% 95%;
+    --popover: 217 33% 12%;
+    --popover-foreground: 217 14% 95%;
+    --primary: 217 91% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 28% 20%;
+    --secondary-foreground: 217 14% 95%;
+    --muted: 217 28% 20%;
+    --muted-foreground: 217 14% 64%;
+    --accent: 217 28% 20%;
+    --accent-foreground: 217 14% 95%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 25% 22%;
+    --input: 217 25% 22%;
+    --ring: 217 91% 45%;
+    --sidebar: 217 35% 10%;
+    --sidebar-foreground: 217 14% 95%;
+    --sidebar-border: 217 25% 18%;
+    --sidebar-accent: 217 30% 16%;
+    --sidebar-accent-foreground: 217 14% 95%;
+    --sidebar-ring: 217 91% 45%;
+    --chart-1: 217 70% 60%;
+    --chart-2: 160 60% 50%;
+    --chart-3: 30 80% 60%;
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 640px) {
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+}
+
+/* Light mode - default */
+.recharts-text {
+  fill: #000000 !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  fill: #000000 !important;
+}
+
+.recharts-surface text {
+  fill: #000000 !important;
+}
+
+text {
+  fill: #000000 !important;
+}
+
+/* Dark mode overrides */
+.dark .recharts-text {
+  fill: #ffffff !important;
+}
+
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+}
+
+.dark .recharts-surface text {
+  fill: #ffffff !important;
+}
+
+.dark text {
+  fill: #ffffff !important;
+}
+
+/* Recharts tooltip styling */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+.recharts-default-tooltip {
+  outline: none !important;
+}
