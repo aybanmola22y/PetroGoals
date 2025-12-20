@@ -1,3 +1,5 @@
+//app\login\page.tsx
+
 "use client"
 
 import * as React from "react"
@@ -10,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { LoadingScreen } from "@/components/loading-screen"
 import { store } from "@/lib/store"
-import { isConnected } from "@/lib/supabase"
+import { isConnected, supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,13 +24,102 @@ export default function LoginPage() {
   const [supabaseConnected, setSupabaseConnected] = React.useState<boolean | null>(null)
   const [storeInitialized, setStoreInitialized] = React.useState(false)
   const [showLoadingScreen, setShowLoadingScreen] = React.useState(false)
+React.useEffect(() => {
+  const handleOAuthCallback = async () => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    
+    if (accessToken) {
+      console.log("🔐 OAuth tokens found in URL, processing...")
+      
+      if (!supabase) {
+        console.error("❌ Supabase not configured")
+        return
+      }
+
+      try {
+        const { data: { session }, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        })
+
+        if (error) {
+          console.error("❌ Failed to set session:", error)
+          setError("Authentication failed. Please try again.")
+          window.history.replaceState(null, '', window.location.pathname)
+          return
+        }
+
+        if (session) {
+          console.log("✅ Session established:", session.user)
+          
+          const user = {
+            id: session.user.id,
+            email: session.user.email || "",
+            name: session.user.user_metadata?.full_name || 
+                  session.user.user_metadata?.name ||
+                  session.user.email?.split("@")[0] || "User",
+            profilePicture: session.user.user_metadata?.avatar_url || 
+                           session.user.user_metadata?.picture || null,
+          }
+
+          localStorage.setItem("user", JSON.stringify(user))
+          document.cookie = `auth_token=${JSON.stringify(user)}; path=/; max-age=${7 * 24 * 60 * 60}`
+          
+          await store.initialize()
+          
+          console.log("✅ User authenticated, redirecting to dashboard...")
+          window.history.replaceState(null, '', window.location.pathname)
+          
+          setShowLoadingScreen(true)
+          setTimeout(() => router.push("/dashboard"), 500)
+        }
+      } catch (err) {
+        console.error("❌ Error processing OAuth callback:", err)
+        setError("Authentication failed. Please try again.")
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    }
+  }
+
+  handleOAuthCallback()
+}, [router])
 
   React.useEffect(() => {
-    setSupabaseConnected(isConnected())
-    store.initialize().then(() => {
-      setStoreInitialized(true)
-    })
-  }, [])
+  if (!supabase) return
+
+  // Check if user is already logged in
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      router.push("/dashboard")
+    }
+  })
+
+  // Listen for auth changes
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_IN" && session) {
+      router.push("/dashboard")
+    }
+  })
+
+  return () => subscription.unsubscribe()
+}, [router])
+
+
+  React.useEffect(() => {
+  console.group("🧪 Login Page Init")
+  console.log("Supabase connected:", isConnected())
+  console.log("Supabase client:", supabase)
+  console.groupEnd()
+
+  setSupabaseConnected(isConnected())
+  store.initialize().then(() => {
+    setStoreInitialized(true)
+  })
+}, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,16 +150,44 @@ export default function LoginPage() {
     setIsLoading(false)
   }
 
-  const handleMicrosoftLogin = async () => {
-    setIsMicrosoftLoading(true)
-    setError("")
-    
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setError("Microsoft SSO integration coming soon. Please use email/password login.")
+
+const handleMicrosoftLogin = async () => {
+  setIsMicrosoftLoading(true)
+  setError("")
+
+  if (!supabase) {
+    setError("Supabase is not configured. Microsoft login is unavailable.")
     setIsMicrosoftLoading(false)
+    return
   }
 
+  try {
+    console.log("🔐 Starting Microsoft OAuth login")
+    
+    // Supabase will redirect back to login page with tokens in URL hash
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+        scopes: "email profile openid",
+      },
+    })
+
+    if (error) {
+      console.error("❌ OAuth error:", error)
+      setError(error.message)
+      setIsMicrosoftLoading(false)
+      return
+    }
+
+    console.log("✅ OAuth initiated successfully, redirecting to Microsoft...")
+    // Browser will redirect to Microsoft, then back through Supabase, then to dashboard
+  } catch (err: any) {
+    console.error("❌ Unexpected error:", err)
+    setError(err.message || "An unexpected error occurred")
+    setIsMicrosoftLoading(false)
+  }
+}
   if (showLoadingScreen) {
     return <LoadingScreen />
   }

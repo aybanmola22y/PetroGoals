@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { LogoutScreen } from "@/components/logout-screen"
 import { store } from "@/lib/store"
+import { supabase } from "@/lib/supabase"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function DashboardLayout({
@@ -21,6 +22,15 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     const initializeApp = async () => {
+      // Check if we're in the middle of logging out
+      const loggingOut = sessionStorage.getItem("logging_out")
+      if (loggingOut) {
+        console.log("🚪 Logout in progress, redirecting to login")
+        sessionStorage.removeItem("logging_out")
+        router.push("/login")
+        return
+      }
+
       const userStr = localStorage.getItem("user")
       if (userStr) {
         try {
@@ -34,7 +44,42 @@ export default function DashboardLayout({
           router.push("/login")
         }
       } else {
-        router.push("/login")
+        // No user in localStorage, check Supabase session as fallback
+        if (supabase) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession()
+            
+            if (session) {
+              console.log("✅ Found Supabase session, creating user object")
+              
+              const user = {
+                id: session.user.id,
+                email: session.user.email || "",
+                name: session.user.user_metadata?.full_name ||
+                      session.user.user_metadata?.name ||
+                      `${session.user.user_metadata?.given_name || ''} ${session.user.user_metadata?.family_name || ''}`.trim() ||
+                      session.user.email?.split("@")[0] || "User",
+                profilePicture: session.user.user_metadata?.avatar_url || 
+                               session.user.user_metadata?.picture || 
+                               session.user.user_metadata?.photo ||
+                               null,
+              }
+
+              localStorage.setItem("user", JSON.stringify(user))
+              store.setCurrentUser(user)
+              setIsAuthenticated(true)
+              await store.initialize()
+              setIsInitialized(true)
+            } else {
+              router.push("/login")
+            }
+          } catch (error) {
+            console.error("Error checking Supabase session:", error)
+            router.push("/login")
+          }
+        } else {
+          router.push("/login")
+        }
       }
       setIsLoading(false)
     }
@@ -42,13 +87,36 @@ export default function DashboardLayout({
     initializeApp()
   }, [router])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    console.log("🚪 Logging out...")
     setIsLoggingOut(true)
-    setTimeout(() => {
+    
+    try {
+      // Small delay to show the logout animation
+      await new Promise(resolve => setTimeout(resolve, 1200))
+      
+      // Set flag to prevent redirect loop
+      sessionStorage.setItem("logging_out", "true")
+      
+      // Clear all user data
       store.logout()
       localStorage.removeItem("user")
-      router.push("/login")
-    }, 1500)
+      
+      // Clear cookies
+      document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
+      
+      // Sign out from Supabase if available
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
+      
+      // Hard redirect to clear all state
+      window.location.href = "/login"
+    } catch (error) {
+      console.error("Error during logout:", error)
+      // Force redirect even on error
+      window.location.href = "/login"
+    }
   }
 
   if (isLoggingOut) {

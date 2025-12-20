@@ -10,13 +10,15 @@ import {
   LogOut,
   Target,
   Menu,
-  X
+  X,
+  User
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const navItems = [
@@ -43,6 +45,40 @@ interface SidebarProps {
 
 function SidebarContent({ onLogout }: Pick<SidebarProps, 'onLogout'>) {
   const pathname = usePathname()
+  const [user, setUser] = React.useState<{
+    name: string
+    email: string
+    profilePicture?: string | null
+  } | null>(null)
+
+  React.useEffect(() => {
+    // Get user from localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser)
+        setUser(parsedUser)
+        
+        // Log to help debug
+        console.log("👤 User loaded in sidebar:", parsedUser)
+        if (!parsedUser.profilePicture) {
+          console.log("⚠️ No profile picture found for user")
+        }
+      } catch (error) {
+        console.error("Failed to parse user data:", error)
+      }
+    }
+  }, [])
+
+  // Get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -76,11 +112,40 @@ function SidebarContent({ onLogout }: Pick<SidebarProps, 'onLogout'>) {
         </nav>
       </ScrollArea>
 
-      <div className="border-t p-3">
-        <div className="flex items-center justify-between mb-3 px-3">
+      <div className="border-t p-3 space-y-3">
+        {/* User Profile Section */}
+        {user && (
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
+              {user.profilePicture ? (
+                <AvatarImage 
+                  src={user.profilePicture} 
+                  alt={user.name}
+                  onError={(e) => {
+                    // Hide broken image if URL fails to load
+                    console.log("Failed to load profile picture:", user.profilePicture)
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              ) : null}
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user.name}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between px-3">
           <span className="text-sm text-muted-foreground">Theme</span>
           <ThemeToggle />
         </div>
+
+        {/* Logout Button */}
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"

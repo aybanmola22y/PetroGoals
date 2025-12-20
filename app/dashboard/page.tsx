@@ -15,7 +15,9 @@ import {
   Award,
   Handshake,
   Zap,
-  Briefcase
+  Briefcase,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +25,7 @@ import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { 
   Select,
   SelectContent,
@@ -50,6 +53,9 @@ import {
   Line,
 } from "recharts"
 import { format, subMonths, startOfMonth, endOfMonth, startOfDay, startOfWeek, isAfter, isEqual } from "date-fns"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { supabase } from "@/lib/supabase"
 
 function useTheme() {
   const [isDark, setIsDark] = React.useState(false)
@@ -69,7 +75,6 @@ function useTheme() {
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-    // Check if this is a status distribution chart (shows count, not percentage)
     const isStatusChart = ["On Track", "At Risk", "Off Track"].includes(payload[0]?.name)
     
     return (
@@ -96,7 +101,6 @@ function CustomTooltip({ active, payload, label }: any) {
   return null
 }
 
-
 function StatusBadge({ status }: { status: "on-track" | "at-risk" | "off-track" }) {
   const config = {
     "on-track": { label: "On Track", variant: "success" as const, icon: CheckCircle },
@@ -122,46 +126,46 @@ function CheckInItem({ checkIn }: { checkIn: CheckIn }) {
     .toUpperCase()
 
   return (
-    <div className="group relative py-3 sm:py-5 border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors duration-150 -mx-1 sm:-mx-2 px-1 sm:px-2 rounded-lg">
-      <div className="flex gap-2 sm:gap-4">
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 border-2 border-primary/20">
-          <AvatarFallback className="text-[10px] sm:text-xs font-semibold bg-primary/5 text-primary">
+    <div className="group relative py-3 border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors duration-150 -mx-2 px-2 rounded-lg">
+      <div className="flex gap-3">
+        <Avatar className="h-8 w-8 shrink-0 border-2 border-primary/20">
+          <AvatarFallback className="text-xs font-semibold bg-primary/5 text-primary">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0 space-y-2 sm:space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-xs sm:text-sm text-foreground">{checkIn.userName}</span>
-              <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0 h-4 sm:h-5 font-medium">
+              <span className="font-medium text-sm text-foreground">{checkIn.userName}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium">
                 {checkIn.department}
               </Badge>
             </div>
-            <time className="text-[10px] sm:text-xs text-muted-foreground">
+            <time className="text-xs text-muted-foreground">
               {formatDateTime(checkIn.createdAt)}
             </time>
           </div>
           
-          <div className="space-y-1.5 sm:space-y-2">
-            <p className="text-xs sm:text-sm font-medium text-foreground/90 leading-snug line-clamp-2 sm:line-clamp-none">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground/90 leading-snug line-clamp-2">
               {checkIn.okrGoal}
             </p>
             {checkIn.message && (
-              <blockquote className="text-xs sm:text-sm text-muted-foreground pl-2 sm:pl-3 border-l-2 border-muted-foreground/20 italic line-clamp-2 sm:line-clamp-none">
+              <blockquote className="text-xs text-muted-foreground pl-2 border-l-2 border-muted-foreground/20 italic line-clamp-2">
                 {checkIn.message}
               </blockquote>
             )}
           </div>
           
           {checkIn.keyResultUpdates && checkIn.keyResultUpdates.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1">
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
               {checkIn.keyResultUpdates.map((update, idx) => (
                 <div 
                   key={idx} 
-                  className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 >
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  <span className="font-semibold truncate max-w-[60px] sm:max-w-none">{update.keyResultTitle}:</span>
+                  <TrendingUp className="h-3 w-3" />
+                  <span className="font-semibold">{update.keyResultTitle}:</span>
                   <span>{update.previousValue}</span>
                   <span className="text-emerald-500">→</span>
                   <span className="font-semibold">{update.newValue}</span>
@@ -189,6 +193,7 @@ function generateMonthOptions() {
   }
   return options
 }
+// Part 2: Main component setup with collapsible sidebar state
 
 export default function OverviewPage() {
   const [selectedDepartment, setSelectedDepartment] = React.useState<string>("all")
@@ -200,12 +205,13 @@ export default function OverviewPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [lastUpdateTime, setLastUpdateTime] = React.useState(new Date())
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false)
   const isDark = useTheme()
   const textColor = isDark ? '#ffffff' : '#000000'
-  
+  const router = useRouter()
+
   const monthOptions = React.useMemo(() => generateMonthOptions(), [])
   
-  // Update timestamp only when actual data changes
   React.useEffect(() => {
     setLastUpdateTime(new Date())
   }, [stats, checkIns, okrs, notifications])
@@ -302,398 +308,432 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-semibold" data-testid="text-page-title">Overview</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Company-wide Goals & OKRs Performance Dashboard</p>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Last updated: {format(lastUpdateTime, "MMMM dd, yyyy 'at' HH:mm:ss")}
-            </p>
-          </div>
-          <NotificationBell 
-            notifications={notifications}
-            okrs={okrs}
-            onMarkAsRead={handleMarkAsRead}
-            onMarkAllAsRead={handleMarkAllAsRead}
-            onClearAll={handleClearAll}
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-month-filter">
-              <SelectValue placeholder="Filter by month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              {monthOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-            <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-department-filter">
-              <SelectValue placeholder="Filter by department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {DEPARTMENTS.map(dept => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <span className="text-lg sm:text-xl">📌</span> Mission, Vision & Values
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
-            <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
-              <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                <span>📌</span> Mission
-              </h4>
-              <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.mission}</p>
-            </div>
-            <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
-              <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                <span>📌</span> Vision
-              </h4>
-              <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.vision}</p>
-            </div>
-            <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
-              <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                <Award className="h-4 w-4" /> Values
-              </h4>
-              <ul className="space-y-1.5 sm:space-y-2 mt-2">
-                {COMPANY_INFO.values?.map((value, index) => (
-                  <li key={index} className="text-xs sm:text-sm text-muted-foreground flex gap-2">
-                    <span className="text-primary font-bold">•</span>
-                    <span>{value}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <span className="text-lg sm:text-xl">🎯</span> Strategic Pillars
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {COMPANY_INFO.strategicPlan.map((pillar, index) => (
-              <div key={index} className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
-                <h4 className="text-xs sm:text-sm font-semibold text-primary">{pillar}</h4>
+    <div className="p-4 sm:p-6">
+      <div className="flex gap-4 sm:gap-6">
+        {/* Main Content Column */}
+        <div className={`flex-1 space-y-4 sm:space-y-6 transition-all duration-300 ${isSidebarCollapsed ? 'mr-0' : ''}`}>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-semibold" data-testid="text-page-title">Overview</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Company-wide Goals & OKRs Performance Dashboard</p>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Last updated: {format(lastUpdateTime, "MMMM dd, yyyy 'at' HH:mm:ss")}
+                </p>
               </div>
-            ))}
+              <NotificationBell 
+                notifications={notifications}
+                okrs={okrs}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onClearAll={handleClearAll}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-month-filter">
+                  <SelectValue placeholder="Filter by month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  {monthOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-department-filter">
+                  <SelectValue placeholder="Filter by department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {DEPARTMENTS.map(dept => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total OKRs</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-2xl sm:text-3xl font-bold text-primary" data-testid="text-total-okrs">{stats.total}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <Building2 className="h-3 w-3 hidden sm:block" />
-              <span className="truncate">{stats.uniqueDepartments} departments</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Overall Progress</CardTitle>
-            <Target className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-2xl sm:text-3xl font-bold" data-testid="text-overall-progress">{stats.overallProgress}%</div>
-            <Progress 
-              value={stats.overallProgress} 
-              className={`mt-2 ${stats.overallProgress >= 80 ? '[&>div]:bg-emerald-500' : ''}`}
-            />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">On Track</CardTitle>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-2xl sm:text-3xl font-bold text-emerald-500" data-testid="text-on-track">{stats.onTrack}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">on target</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">At Risk</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-2xl sm:text-3xl font-bold text-amber-500" data-testid="text-at-risk">{stats.atRisk}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">need attention</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="col-span-2 sm:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Off Track</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-2xl sm:text-3xl font-bold text-red-500" data-testid="text-off-track">{stats.offTrack}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">behind schedule</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
-            <CardTitle className="text-base sm:text-lg">Department Progress</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              OKR completion rate by department
-              <span className="block text-xs mt-1">
-                Updated: {format(lastUpdateTime, "MMM dd, yyyy HH:mm")}
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              {departmentChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={departmentChartData} layout="vertical" margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(0, 0, 0, 0.1)" />
-                    <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="progress" radius={[0, 4, 4, 0]}>
-                      {departmentChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.progress >= 80 ? "#10b981" : "hsl(var(--primary))"} 
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No data available. Add OKRs to see department progress.
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <span className="text-lg sm:text-xl">📌</span> Mission, Vision & Values
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+                <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
+                  <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                    <span>📌</span> Mission
+                  </h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.mission}</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
-            <CardTitle className="text-base sm:text-lg">OKR Status Distribution</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Current status of all objectives
-              <span className="block text-xs mt-1">
-                As of: {format(lastUpdateTime, "MMM dd, yyyy HH:mm")}
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              {stats.total > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statusData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No OKRs found. Create your first OKR to see status distribution.
+                <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
+                  <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                    <span>📌</span> Vision
+                  </h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.vision}</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
+                  <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                    <Award className="h-4 w-4" /> Values
+                  </h4>
+                  <ul className="space-y-1.5 sm:space-y-2 mt-2">
+                    {COMPANY_INFO.values?.map((value, index) => (
+                      <li key={index} className="text-xs sm:text-sm text-muted-foreground flex gap-2">
+                        <span className="text-primary font-bold">•</span>
+                        <span>{value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {filteredOKRs.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-base sm:text-lg">
-              OKR Progress Trends
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Individual progress tracking for each OKR
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredOKRs.map((okr) => {
-                // Calculate overall OKR progress by averaging all key results
-                const getOverallProgressHistory = () => {
-                  if (okr.keyResults.length === 0) return []
-                  
-                  // Collect all progress history entries from all key results
-                  const allProgressEntries: { [date: string]: number[] } = {}
-                  
-                  for (const kr of okr.keyResults) {
-                    if (kr.progressHistory && kr.progressHistory.length > 0) {
-                      for (const entry of kr.progressHistory) {
-                        const dateStr = entry.date
-                        const percentage = (entry.value / kr.target) * 100
-                        
-                        if (!allProgressEntries[dateStr]) {
-                          allProgressEntries[dateStr] = []
-                        }
-                        allProgressEntries[dateStr].push(percentage)
-                      }
-                    }
-                  }
-                  
-                  // If no history exists, return current progress for today
-                  if (Object.keys(allProgressEntries).length === 0) {
-                    const today = format(new Date(), "MMM dd, yyyy")
-                    const currentProgress = Math.round(
-                      okr.keyResults.reduce((acc, kr) => acc + (kr.current / kr.target) * 100, 0) / okr.keyResults.length
-                    )
-                    return [{ date: today, value: Math.min(currentProgress, 100) }]
-                  }
-                  
-                  // Convert to array, average by date, and sort
-                  const progressArray = Object.entries(allProgressEntries)
-                    .map(([date, values]) => ({
-                      date,
-                      value: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
-                    }))
-                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  
-                  return progressArray
-                }
-                
-                const progressData = getOverallProgressHistory()
-                
-                return (
-                  <div key={okr.id} className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
-                    <div className="mb-4 sm:mb-5 space-y-1.5 sm:space-y-2">
-                      <h4 className="text-xs sm:text-sm font-semibold text-primary line-clamp-2">{okr.goal}</h4>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{okr.department}</p>
-                      <div className="pt-1 sm:pt-1.5">
-                        <StatusBadge status={okr.status} />
-                      </div>
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <span className="text-lg sm:text-xl">🎯</span> Strategic Pillars
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                {COMPANY_INFO.strategicPlan.map((pillar, index) => (
+                  <div key={index} className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
+                    <h4 className="text-xs sm:text-sm font-semibold text-primary">{pillar}</h4>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+// Part 3: Stats cards, charts, and collapsible sidebar
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">Total OKRs</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold text-primary" data-testid="text-total-okrs">{stats.total}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <Building2 className="h-3 w-3 hidden sm:block" />
+                  <span className="truncate">{stats.uniqueDepartments} departments</span>
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">Overall Progress</CardTitle>
+                <Target className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold" data-testid="text-overall-progress">{stats.overallProgress}%</div>
+                <Progress 
+                  value={stats.overallProgress} 
+                  className={`mt-2 ${stats.overallProgress >= 80 ? '[&>div]:bg-emerald-500' : ''}`}
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">On Track</CardTitle>
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold text-emerald-500" data-testid="text-on-track">{stats.onTrack}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">on target</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">At Risk</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold text-amber-500" data-testid="text-at-risk">{stats.atRisk}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">need attention</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="col-span-2 sm:col-span-1">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">Off Track</CardTitle>
+                <XCircle className="h-4 w-4 text-red-500" />
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold text-red-500" data-testid="text-off-track">{stats.offTrack}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">behind schedule</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <Card>
+              <CardHeader className="pb-2 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Department Progress</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  OKR completion rate by department
+                  <span className="block text-xs mt-1">
+                    Updated: {format(lastUpdateTime, "MMM dd, yyyy HH:mm")}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  {departmentChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={departmentChartData} layout="vertical" margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(0, 0, 0, 0.1)" />
+                        <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
+                        <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="progress" radius={[0, 4, 4, 0]}>
+                          {departmentChartData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.progress >= 80 ? "#10b981" : "hsl(var(--primary))"} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No data available. Add OKRs to see department progress.
                     </div>
-                    <div className="h-[200px] sm:h-[240px]">
-                      {progressData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart 
-                            data={progressData}
-                            margin={{ top: 12, right: 16, left: 0, bottom: 24 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.1)" />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fontSize: 11, fontStyle: "normal" }}
-                              tickFormatter={(value) => {
-                                const date = new Date(value)
-                                return format(date, "MMM dd")
-                              }}
-                              angle={-15}
-                              textAnchor="end"
-                              height={60}
-                            />
-                            <YAxis 
-                              domain={[0, 100]} 
-                              ticks={[0, 25, 50, 75, 100]}
-                              tickFormatter={(v) => `${v}%`}
-                              tick={{ fontSize: 11 }}
-                              width={35}
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Line 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={2}
-                              dot={{ fill: "hsl(var(--primary))", r: 3 }}
-                              activeDot={{ r: 5 }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-                          No progress history
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">OKR Status Distribution</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Current status of all objectives
+                  <span className="block text-xs mt-1">
+                    As of: {format(lastUpdateTime, "MMM dd, yyyy HH:mm")}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  {stats.total > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={statusData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No OKRs found. Create your first OKR to see status distribution.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* OKR Progress Trends */}
+          {filteredOKRs.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  OKR Progress Trends
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Individual progress tracking for each OKR
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {filteredOKRs.map((okr) => {
+                    const getOverallProgressHistory = () => {
+                      if (okr.keyResults.length === 0) return []
+                      
+                      const allProgressEntries: { [date: string]: number[] } = {}
+                      
+                      for (const kr of okr.keyResults) {
+                        if (kr.progressHistory && kr.progressHistory.length > 0) {
+                          for (const entry of kr.progressHistory) {
+                            const dateStr = entry.date
+                            const percentage = (entry.value / kr.target) * 100
+                            
+                            if (!allProgressEntries[dateStr]) {
+                              allProgressEntries[dateStr] = []
+                            }
+                            allProgressEntries[dateStr].push(percentage)
+                          }
+                        }
+                      }
+                      
+                      if (Object.keys(allProgressEntries).length === 0) {
+                        const today = format(new Date(), "MMM dd, yyyy")
+                        const currentProgress = Math.round(
+                          okr.keyResults.reduce((acc, kr) => acc + (kr.current / kr.target) * 100, 0) / okr.keyResults.length
+                        )
+                        return [{ date: today, value: Math.min(currentProgress, 100) }]
+                      }
+                      
+                      const progressArray = Object.entries(allProgressEntries)
+                        .map(([date, values]) => ({
+                          date,
+                          value: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+                        }))
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      
+                      return progressArray
+                    }
+                    
+                    const progressData = getOverallProgressHistory()
+                    
+                    return (
+                      <div key={okr.id} className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
+                        <div className="mb-4 sm:mb-5 space-y-1.5 sm:space-y-2">
+                          <h4 className="text-xs sm:text-sm font-semibold text-primary line-clamp-2">{okr.goal}</h4>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">{okr.department}</p>
+                          <div className="pt-1 sm:pt-1.5">
+                            <StatusBadge status={okr.status} />
+                          </div>
+                        </div>
+                        <div className="h-[200px] sm:h-[240px]">
+                          {progressData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart 
+                                data={progressData}
+                                margin={{ top: 12, right: 16, left: 0, bottom: 24 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.1)" />
+                                <XAxis 
+                                  dataKey="date" 
+                                  tick={{ fontSize: 11, fontStyle: "normal" }}
+                                  tickFormatter={(value) => {
+                                    const date = new Date(value)
+                                    return format(date, "MMM dd")
+                                  }}
+                                  angle={-15}
+                                  textAnchor="end"
+                                  height={60}
+                                />
+                                <YAxis 
+                                  domain={[0, 100]} 
+                                  ticks={[0, 25, 50, 75, 100]}
+                                  tickFormatter={(v) => `${v}%`}
+                                  tick={{ fontSize: 11 }}
+                                  width={35}
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke="hsl(var(--primary))" 
+                                  strokeWidth={2}
+                                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
+                                  activeDot={{ r: 5 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
+                              No progress history
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Collapsible Right Sidebar - Check-ins */}
+        <div className={`hidden lg:block transition-all duration-300 ${isSidebarCollapsed ? 'w-12' : 'w-[380px]'}`}>
+          <div className="sticky top-6">
+            {isSidebarCollapsed ? (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="h-full w-12 rounded-lg shadow-lg"
+                title="Expand check-ins"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Card className="overflow-hidden border-0 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/30 border-b px-4 py-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold tracking-tight">Latest Check-ins</CardTitle>
+                        <CardDescription className="text-xs mt-1">Activity from all departments</CardDescription>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsSidebarCollapsed(true)}
+                        className="h-8 w-8 -mr-2"
+                        title="Collapse check-ins"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Select value={checkInFilter} onValueChange={setCheckInFilter}>
+                      <SelectTrigger className="w-full h-9 text-sm" data-testid="select-checkin-filter">
+                        <SelectValue placeholder="Filter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Check-ins</SelectItem>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="week">This Week</SelectItem>
+                        <SelectItem value="month">This Month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+                    <div className="px-4 py-2">
+                      {filteredCheckIns.slice(0, 10).map((checkIn) => (
+                        <CheckInItem key={checkIn.id} checkIn={checkIn} />
+                      ))}
+                      {filteredCheckIns.length === 0 && (
+                        <div className="py-16 text-center">
+                          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted mb-4">
+                            <Target className="h-6 w-6 text-muted-foreground/60" />
+                          </div>
+                          <p className="text-sm font-medium text-muted-foreground">No check-ins found</p>
+                          <p className="text-xs text-muted-foreground/60 mt-1">Adjust your filter or check back later</p>
                         </div>
                       )}
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="overflow-hidden border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/30 border-b px-4 sm:px-6 py-3 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Latest Check-ins</CardTitle>
-              <CardDescription className="text-xs sm:text-sm mt-1">Activity feed from across all departments</CardDescription>
-            </div>
-            <Select value={checkInFilter} onValueChange={setCheckInFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm" data-testid="select-checkin-filter">
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Check-ins</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </CardHeader>
-        <CardContent className="pt-4 px-3 sm:px-6">
-          <ScrollArea className="h-[350px] sm:h-[400px] pr-2 sm:pr-4">
-            <div className="space-y-2">
-              {filteredCheckIns.slice(0, 10).map((checkIn) => (
-                <CheckInItem key={checkIn.id} checkIn={checkIn} />
-              ))}
-              {filteredCheckIns.length === 0 && (
-                <div className="py-16 text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted mb-4">
-                    <Target className="h-6 w-6 text-muted-foreground/60" />
-                  </div>
-                  <p className="text-sm font-medium text-muted-foreground">No check-ins found</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">Adjust your filter or check back later</p>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
