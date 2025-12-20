@@ -410,8 +410,6 @@ export default function OverviewPage() {
             </CardContent>
           </Card>
 
-// Part 3: Stats cards, charts, and collapsible sidebar
-
           {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
             <Card>
