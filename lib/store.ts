@@ -4,7 +4,7 @@ import { OKR, CheckIn, User, CompanyInfo, Department, DEPARTMENTS, Comment, Noti
 import { supabase, isConnected } from "./supabase"
 
 export const COMPANY_INFO: CompanyInfo = {
-  mission: "To deliver high-quality training, consultancy, and safety services supported by strong digital systems and customer-centered innovations.",
+  mission: "To provide quality training, review, and consultancy services to clients seeking growth and development.",
   vision: "To be a regional leader in innovative, sustainable, and comprehensive HSE, training, and consultancy solutions.",
   strategicPlan: [
     "Business Expansion",
