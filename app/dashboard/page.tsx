@@ -3,6 +3,7 @@
 import * as React from "react"
 import { 
   Target, 
+  Pin,
   TrendingUp, 
   AlertTriangle, 
   XCircle,
@@ -359,21 +360,21 @@ export default function OverviewPage() {
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <span className="text-lg sm:text-xl">📌</span> Mission, Vision & Values
-              </CardTitle>
+                <Pin className="h-5 w-5 text-primary" /> Mission, Vision & Values
+                </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
                 <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
                   <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                    <span>📌</span> Mission
-                  </h4>
+                    <Pin className="h-4 w-4" /> Mission
+                    </h4>
                   <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.mission}</p>
                 </div>
                 <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
                   <h4 className="text-xs sm:text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                    <span>📌</span> Vision
-                  </h4>
+                    <Pin className="h-4 w-4" /> Vision
+                    </h4>
                   <p className="text-xs sm:text-sm text-muted-foreground">{COMPANY_INFO.vision}</p>
                 </div>
                 <div className="bg-background/60 rounded-lg p-3 sm:p-4 border border-primary/10">
@@ -396,7 +397,7 @@ export default function OverviewPage() {
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <span className="text-lg sm:text-xl">🎯</span> Strategic Pillars
+                <Target className="h-5 w-5 text-primary" /> Strategic Pillars
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
