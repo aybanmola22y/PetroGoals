@@ -5,7 +5,7 @@ import { supabase, isConnected } from "./supabase"
 
 export const COMPANY_INFO: CompanyInfo = {
   mission: "To provide quality training, review, and consultancy services to clients seeking growth and development.",
-  vision: "To be a regional leader in innovative, sustainable, and comprehensive HSE, training, and consultancy solutions.",
+  vision: "To be the leading institution providing one-stop-shop services on becoming better, safer and healthier nation.",
   strategicPlan: [
     "Business Expansion",
     "Operational Excellence",
