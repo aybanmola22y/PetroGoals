@@ -31,6 +31,13 @@ export const DEPARTMENTS: Department[] = [
   "Admin",
 ]
 
+export type StrategicPillar = 
+  | "Assurance"
+  | "Culture"
+  | "Sustainability"
+  | "Digitalization"
+  | "Growth"
+
 export interface MilestoneStage {
   id: string
   name: string
@@ -93,6 +100,8 @@ export interface OKR {
   department: Department
   goal: string
   status: OKRStatus
+  strategicPillar?: string
+  createdBy?: string
   keyResults: KeyResult[]
   initiatives: Initiative[]
   createdAt: string

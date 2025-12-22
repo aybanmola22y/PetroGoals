@@ -430,6 +430,7 @@ export function OKRCard({ okr, onEdit, onDelete, onCheckIn, onInitiativeToggle, 
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge variant="outline">{okr.department}</Badge>
               <StatusIndicator status={okr.status} />
+              {okr.createdBy && <Badge variant="secondary" className="text-xs">Created by: {okr.createdBy}</Badge>}
             </div>
             <h3 className="text-lg font-medium leading-tight">{okr.goal}</h3>
           </div>

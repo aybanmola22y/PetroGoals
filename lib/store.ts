@@ -7,11 +7,11 @@ export const COMPANY_INFO: CompanyInfo = {
   mission: "To provide quality training, review, and consultancy services to clients seeking growth and development.",
   vision: "To be the leading institution providing one-stop-shop services on becoming better, safer and healthier nation.",
   strategicPlan: [
-    "Safety First",
-    "Integrity & Transparency",
-    "Innovation & Excellence",
+    "Assurance",
+    "Culture",
     "Sustainability",
-    "Teamwork & Collaboration",
+    "Digitalization",
+    "Growth",
   ],
   values: [
     "Leadership in Health, Safety, and Environment",
@@ -162,6 +162,8 @@ class Store {
         department: okr.department as Department,
         goal: okr.goal,
         status: okr.status as OKR['status'],
+        strategicPillar: okr.strategic_pillar,
+        createdBy: okr.created_by,
         keyResults: formattedKeyResults,
         initiatives: formattedInitiatives,
         createdAt: okr.created_at,
@@ -357,7 +359,9 @@ class Store {
       .insert({
         department: okr.department,
         goal: okr.goal,
-        status: okr.status
+        status: okr.status,
+        strategic_pillar: okr.strategicPillar || null,
+        created_by: okr.createdBy || null
       })
       .select()
       .single()
@@ -437,7 +441,9 @@ class Store {
       .update({
         department: updates.department,
         goal: updates.goal,
-        status: updates.status
+        status: updates.status,
+        strategic_pillar: updates.strategicPillar || null,
+        created_by: updates.createdBy || null
       })
       .eq('id', id)
 

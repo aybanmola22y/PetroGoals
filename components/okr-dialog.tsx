@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { OKR, KeyResult, Initiative, DEPARTMENTS, Department, TargetType, MilestoneStage, DEFAULT_MILESTONE_STAGES } from "@/types/okr"
+import { OKR, KeyResult, Initiative, DEPARTMENTS, Department, TargetType, MilestoneStage, DEFAULT_MILESTONE_STAGES, StrategicPillar } from "@/types/okr"
+import { COMPANY_INFO } from "@/lib/store"
 
 interface OKRDialogProps {
   open: boolean
@@ -81,6 +82,7 @@ const recalculateWeights = (stages: MilestoneStage[]): MilestoneStage[] => {
 export function OKRDialog({ open, onOpenChange, okr, onSubmit }: OKRDialogProps) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [department, setDepartment] = React.useState<Department>("Operations")
+  const [strategicPillar, setStrategicPillar] = React.useState<StrategicPillar | undefined>(undefined)
   const [goal, setGoal] = React.useState("")
   const [keyResults, setKeyResults] = React.useState<KeyResult[]>([defaultKeyResult()])
   const [initiatives, setInitiatives] = React.useState<Initiative[]>([defaultInitiative()])
@@ -88,11 +90,13 @@ export function OKRDialog({ open, onOpenChange, okr, onSubmit }: OKRDialogProps)
   React.useEffect(() => {
     if (okr) {
       setDepartment(okr.department)
+      setStrategicPillar(okr.strategicPillar as StrategicPillar | undefined)
       setGoal(okr.goal)
       setKeyResults(okr.keyResults.length > 0 ? okr.keyResults : [defaultKeyResult()])
       setInitiatives(okr.initiatives.length > 0 ? okr.initiatives : [defaultInitiative()])
     } else {
       setDepartment("Operations")
+      setStrategicPillar(undefined)
       setGoal("")
       setKeyResults([defaultKeyResult()])
       setInitiatives([defaultInitiative()])
@@ -108,9 +112,13 @@ export function OKRDialog({ open, onOpenChange, okr, onSubmit }: OKRDialogProps)
 
     await new Promise(resolve => setTimeout(resolve, 300))
 
+    const currentUser = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : {}
+    
     onSubmit({
       department,
       goal,
+      strategicPillar,
+      createdBy: currentUser.name || "Unknown",
       status: "on-track",
       keyResults: validKeyResults,
       initiatives: validInitiatives,
@@ -277,6 +285,20 @@ export function OKRDialog({ open, onOpenChange, okr, onSubmit }: OKRDialogProps)
                     <SelectContent>
                       {DEPARTMENTS.map(dept => (
                         <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="strategic-pillar">Strategic Pillar</Label>
+                  <Select value={strategicPillar || ""} onValueChange={(v) => setStrategicPillar(v ? v as StrategicPillar : undefined)}>
+                    <SelectTrigger data-testid="select-okr-pillar">
+                      <SelectValue placeholder="Select strategic pillar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANY_INFO.strategicPlan.map(pillar => (
+                        <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
