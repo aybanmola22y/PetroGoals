@@ -238,7 +238,10 @@ export default function DepartmentsPage() {
         }
         return kr
       })
-      await store.updateOKR(selectedOKR.id, { keyResults: updatedKeyResults })
+      await store.updateOKR(selectedOKR.id, { 
+        keyResults: updatedKeyResults,
+        strategicPillar: selectedOKR.strategicPillar
+      })
     }
     
     loadOKRs()
@@ -261,7 +264,10 @@ export default function DepartmentsPage() {
         const updatedInitiatives = okr.initiatives.map(init =>
           init.id === initiativeId ? { ...init, completed } : init
         )
-        await store.updateOKR(okrId, { initiatives: updatedInitiatives })
+        await store.updateOKR(okrId, { 
+          initiatives: updatedInitiatives,
+          strategicPillar: okr.strategicPillar
+        })
         loadOKRs()
       }
     } finally {
