@@ -126,7 +126,7 @@ export default function DepartmentsPage() {
   const [expandedOkrId, setExpandedOkrId] = React.useState<string | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [loadingMode, setLoadingMode] = React.useState<"creating" | "updating" | "deleting">("creating")
-  const [pendingInitiativeUpdates, setPendingInitiativeUpdates] = React.useState<Set<string>>(new Set())
+  const pendingInitiativeUpdates = React.useRef<Set<string>>(new Set())
 
   const isOKRCompleted = (okr: OKR): boolean => {
     if (okr.keyResults.length === 0) return false
@@ -251,12 +251,12 @@ export default function DepartmentsPage() {
   const handleInitiativeToggle = async (okrId: string, initiativeId: string, completed: boolean) => {
     const updateKey = `${okrId}-${initiativeId}`
     
-    // Prevent duplicate calls
-    if (pendingInitiativeUpdates.has(updateKey)) {
+    // Prevent duplicate calls using ref (updates immediately, no async batching)
+    if (pendingInitiativeUpdates.current.has(updateKey)) {
       return
     }
     
-    setPendingInitiativeUpdates(prev => new Set(prev).add(updateKey))
+    pendingInitiativeUpdates.current.add(updateKey)
     
     try {
       const okr = store.getOKRById(okrId)
@@ -271,11 +271,7 @@ export default function DepartmentsPage() {
         loadOKRs()
       }
     } finally {
-      setPendingInitiativeUpdates(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(updateKey)
-        return newSet
-      })
+      pendingInitiativeUpdates.current.delete(updateKey)
     }
   }
 
