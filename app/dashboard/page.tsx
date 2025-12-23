@@ -257,6 +257,16 @@ export default function OverviewPage() {
     init()
   }, [selectedMonth, selectedDepartment])
 
+  React.useEffect(() => {
+    const refreshOKRsAfterCheckIn = setInterval(() => {
+      const currentOKRs = store.getOKRs()
+      setOkrs(currentOKRs)
+      setCheckIns(store.getCheckIns())
+      setStats(store.getStats(undefined, selectedDepartment))
+    }, 2000)
+    return () => clearInterval(refreshOKRsAfterCheckIn)
+  }, [selectedDepartment])
+
   const handleMarkAsRead = async (id: string) => {
     await store.markNotificationAsRead(id)
     setNotifications(store.getNotifications())
