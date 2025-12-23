@@ -7,11 +7,11 @@ export const COMPANY_INFO: CompanyInfo = {
   mission: "To provide quality training, review, and consultancy services to clients seeking growth and development.",
   vision: "To be the leading institution providing one-stop-shop services on becoming better, safer and healthier nation.",
   strategicPlan: [
-    "Assurance",
-    "Culture",
-    "Sustainability",
-    "Digitalization",
-    "Growth",
+    "Operational Excellence",
+    "Human Capital",
+    "Sustainable Operations",
+    "Digital Transformation",
+    "Business Growth",
   ],
   values: [
     "Leadership in Health, Safety, and Environment",
@@ -20,6 +20,14 @@ export const COMPANY_INFO: CompanyInfo = {
     "Respect for Diversity and Equality",
     "Passion for Service"
   ]
+}
+
+export const STRATEGIC_PILLAR_SUBTITLES: Record<string, string> = {
+  "Operational Excellence": "Quality Service, HSE & Data Security",
+  "Human Capital": "Generative Working Culture & Employee Engagement",
+  "Sustainable Operations": "Strong Financial Management & Positioning",
+  "Digital Transformation": "Digitalization & Data-Driven Operations",
+  "Business Growth": "Expansion & Diversification of Services"
 }
 
 const DEMO_USER: User = {

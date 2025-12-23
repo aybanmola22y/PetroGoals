@@ -3,40 +3,40 @@ export type OKRStatus = "on-track" | "at-risk" | "off-track"
 export type TargetType = "quantitative" | "milestone" | "milestone-custom"
 
 export type Department =
-  | "Operations"
+  | "Core Business Unit (Operations)"
   | "Sales & Marketing"
-  | "HR"
-  | "Finance"
-  | "Accounting"
-  | "Consultant"
-  | "Review"
-  | "HSSEQ"
-  | "HSSE"
-  | "Digital Solutions"
-  | "Information Security"
-  | "Admin"
+  | "HR & Admin Department"
+  | "Training Division"
+  | "Accounting & Finance"
+  | "Consultancy Division"
+  | "Review Division"
+  | "HSSEQ Department"
+  | "Management Team"
+  | "Digital Solutions Division"
+  | "Information Security Department"
+  | "Executive Team"
 
 export const DEPARTMENTS: Department[] = [
-  "Operations",
+  "Core Business Unit (Operations)",
   "Sales & Marketing",
-  "HR",
-  "Finance",
-  "Accounting",
-  "Consultant",
-  "Review",
-  "HSSEQ",
-  "HSSE",
-  "Digital Solutions",
-  "Information Security",
-  "Admin",
+  "HR & Admin Department",
+  "Training Division",
+  "Accounting & Finance",
+  "Consultancy Division",
+  "Review Division",
+  "HSSEQ Department",
+  "Management Team",
+  "Digital Solutions Division",
+  "Information Security Department",
+  "Executive Team"
 ]
 
 export type StrategicPillar = 
-  | "Assurance"
-  | "Culture"
-  | "Sustainability"
-  | "Digitalization"
-  | "Growth"
+  | "Operational Excellence"
+  | "Human Capital"
+  | "Sustainable Operations"
+  | "Digital Transformation"
+  | "Business Growth"
 
 export interface MilestoneStage {
   id: string

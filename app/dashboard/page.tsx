@@ -39,6 +39,7 @@ import { DEPARTMENTS, type Department, type CheckIn, type Notification } from "@
 import { formatDateTime } from "@/lib/utils"
 import { NotificationBell } from "@/components/notification-bell"
 import { StrategicPillarsOverview } from "@/components/strategic-pillars-overview"
+import { StrategicPillarProvider } from "@/components/strategic-pillar-context"
 import {
   AreaChart,
   Area,
@@ -310,8 +311,9 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex gap-4 sm:gap-6">
+    <StrategicPillarProvider>
+      <div className="p-4 sm:p-6">
+        <div className="flex gap-4 sm:gap-6">
         {/* Main Content Column */}
         <div className={`flex-1 space-y-4 sm:space-y-6 transition-all duration-300 ${isSidebarCollapsed ? 'mr-0' : ''}`}>
           <div className="flex flex-col gap-4">
@@ -720,5 +722,6 @@ export default function OverviewPage() {
         </div>
       </div>
     </div>
+    </StrategicPillarProvider>
   )
 }
