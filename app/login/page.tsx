@@ -25,100 +25,154 @@ export default function LoginPage() {
   const [storeInitialized, setStoreInitialized] = React.useState(false)
 
   React.useEffect(() => {
-  const handleOAuthCallback = async () => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const accessToken = hashParams.get('access_token')
-    const refreshToken = hashParams.get('refresh_token')
-    
-    if (accessToken) {
-      console.log("🔐 OAuth tokens found in URL, processing...")
-      
-      if (!supabase) {
-        console.error("❌ Supabase not configured")
-        return
-      }
+    const handleOAuthCallback = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const providerToken = hashParams.get('provider_token')
 
-      try {
-        const { data: { session }, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        })
+      if (accessToken) {
+        console.log("🔐 OAuth tokens found in URL, processing...")
 
-        if (error) {
-          console.error("❌ Failed to set session:", error)
-          setError("Authentication failed. Please try again.")
-          window.history.replaceState(null, '', window.location.pathname)
+        if (!supabase) {
+          console.error("❌ Supabase not configured")
           return
         }
 
-        if (session) {
-          console.log("✅ Session established:", session.user)
-          
-          const user = {
-            id: session.user.id,
-            email: session.user.email || "",
-            name: session.user.user_metadata?.full_name || 
-                  session.user.user_metadata?.name ||
-                  session.user.email?.split("@")[0] || "User",
-            profilePicture: session.user.user_metadata?.avatar_url || 
-                           session.user.user_metadata?.picture || null,
+        try {
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+
+          if (error) {
+            console.error("❌ Failed to set session:", error)
+            setError("Authentication failed. Please try again.")
+            window.history.replaceState(null, '', window.location.pathname)
+            return
           }
 
-          localStorage.setItem("user", JSON.stringify(user))
-          document.cookie = `auth_token=${JSON.stringify(user)}; path=/; max-age=${7 * 24 * 60 * 60}`
-          
-          await store.initialize()
-          
-          console.log("✅ User authenticated, redirecting to dashboard...")
+          if (session) {
+            console.log("✅ Session established:", session.user)
+
+            let profilePicture = session.user.user_metadata?.avatar_url ||
+              session.user.user_metadata?.picture || null
+
+            // Try to fetch from Microsoft Graph if we have a provider token and no picture
+            if (!profilePicture && providerToken) {
+              try {
+                console.log("🖼️ Fetching profile picture from Microsoft Graph...")
+                const response = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
+                  headers: {
+                    'Authorization': `Bearer ${providerToken}`
+                  }
+                })
+
+                if (response.ok) {
+                  const blob = await response.blob()
+                  // Convert blob to base64
+                  const reader = new FileReader()
+                  profilePicture = await new Promise((resolve) => {
+                    reader.onloadend = () => resolve(reader.result as string)
+                    reader.readAsDataURL(blob)
+                  })
+                  console.log("✅ Successfully fetched profile picture from Microsoft")
+                } else {
+                  console.warn("⚠️ Failed to fetch profile picture:", response.status, response.statusText)
+                }
+              } catch (graphError) {
+                console.error("❌ Error fetching from Microsoft Graph:", graphError)
+              }
+            }
+
+            const user = {
+              id: session.user.id,
+              email: session.user.email || "",
+              name: session.user.user_metadata?.full_name ||
+                session.user.user_metadata?.name ||
+                session.user.email?.split("@")[0] || "User",
+              profilePicture: profilePicture,
+            }
+
+            localStorage.setItem("user", JSON.stringify(user))
+            document.cookie = `auth_token=${JSON.stringify(user)}; path=/; max-age=${7 * 24 * 60 * 60}`
+
+            // Update user in database with profile picture if available
+            // We use email as the conflict target to ensure we update the existing user record 
+            // if it was created with a different ID (e.g. pre-populated)
+            const { data: updatedUser, error: upsertError } = await supabase.from('users').upsert({
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              profile_picture: profilePicture,
+              // updated_at removed as it might not exist yet in the schema
+            }, { onConflict: 'email' }).select().single()
+
+            if (upsertError) {
+              console.error("❌ Error upserting user:", upsertError)
+            } else if (updatedUser) {
+              console.log("✅ User record updated in database")
+              // Use the data from the database to ensure consistency
+              user.profilePicture = updatedUser.profile_picture
+            }
+
+            localStorage.setItem("user", JSON.stringify(user))
+            document.cookie = `auth_token=${JSON.stringify(user)}; path=/; max-age=${7 * 24 * 60 * 60}`
+
+            await store.initialize()
+
+            console.log("✅ User authenticated, redirecting to dashboard...")
+            window.history.replaceState(null, '', window.location.pathname)
+
+            router.push("/dashboard")
+          }
+        } catch (err) {
+          console.error("❌ Error processing OAuth callback:", err)
+          setError("Authentication failed. Please try again.")
           window.history.replaceState(null, '', window.location.pathname)
-          
-          router.push("/dashboard")
         }
-      } catch (err) {
-        console.error("❌ Error processing OAuth callback:", err)
-        setError("Authentication failed. Please try again.")
-        window.history.replaceState(null, '', window.location.pathname)
       }
     }
-  }
 
-  handleOAuthCallback()
-}, [router])
-
-  React.useEffect(() => {
-  if (!supabase) return
-
-  // Check if user is already logged in
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      router.push("/dashboard")
-    }
-  })
-
-  // Listen for auth changes
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_IN" && session) {
-      router.push("/dashboard")
-    }
-  })
-
-  return () => subscription.unsubscribe()
-}, [router])
-
+    handleOAuthCallback()
+  }, [router])
 
   React.useEffect(() => {
-  console.group("🧪 Login Page Init")
-  console.log("Supabase connected:", isConnected())
-  console.log("Supabase client:", supabase)
-  console.groupEnd()
+    if (!supabase) return
 
-  setSupabaseConnected(isConnected())
-  store.initialize().then(() => {
-    setStoreInitialized(true)
-  })
-}, [])
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // If we have a session but no profile picture in local storage, we might want to refresh it?
+        // For now, just redirect
+        router.push("/dashboard")
+      }
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        router.push("/dashboard")
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
+
+
+  React.useEffect(() => {
+    console.group("🧪 Login Page Init")
+    console.log("Supabase connected:", isConnected())
+    console.log("Supabase client:", supabase)
+    console.groupEnd()
+
+    setSupabaseConnected(isConnected())
+    store.initialize().then(() => {
+      setStoreInitialized(true)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +180,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     const user = await store.login(email, password)
-    
+
     if (user) {
       if (typeof window !== "undefined") {
         localStorage.setItem("user", JSON.stringify(user))
@@ -141,52 +195,52 @@ export default function LoginPage() {
         setError("Invalid email or password")
       }
     }
-    
+
     setIsLoading(false)
   }
 
 
-const handleMicrosoftLogin = async () => {
-  setIsMicrosoftLoading(true)
-  setError("")
+  const handleMicrosoftLogin = async () => {
+    setIsMicrosoftLoading(true)
+    setError("")
 
-  if (!supabase) {
-    setError("Supabase is not configured. Microsoft login is unavailable.")
-    setIsMicrosoftLoading(false)
-    return
-  }
-
-  try {
-    console.log("🔐 Starting Microsoft OAuth login")
-    
-    // Supabase will redirect back to login page with tokens in URL hash
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "azure",
-      options: {
-        redirectTo: `${window.location.origin}/login`,
-        scopes: "email profile openid",
-      },
-    })
-
-    if (error) {
-      console.error("❌ OAuth error:", error)
-      setError(error.message)
+    if (!supabase) {
+      setError("Supabase is not configured. Microsoft login is unavailable.")
       setIsMicrosoftLoading(false)
       return
     }
 
-    console.log("✅ OAuth initiated successfully, redirecting to Microsoft...")
-    // Browser will redirect to Microsoft, then back through Supabase, then to dashboard
-  } catch (err: any) {
-    console.error("❌ Unexpected error:", err)
-    setError(err.message || "An unexpected error occurred")
-    setIsMicrosoftLoading(false)
+    try {
+      console.log("🔐 Starting Microsoft OAuth login")
+
+      // Supabase will redirect back to login page with tokens in URL hash
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "azure",
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+          scopes: "email profile openid User.Read",
+        },
+      })
+
+      if (error) {
+        console.error("❌ OAuth error:", error)
+        setError(error.message)
+        setIsMicrosoftLoading(false)
+        return
+      }
+
+      console.log("✅ OAuth initiated successfully, redirecting to Microsoft...")
+      // Browser will redirect to Microsoft, then back through Supabase, then to dashboard
+    } catch (err: any) {
+      console.error("❌ Unexpected error:", err)
+      setError(err.message || "An unexpected error occurred")
+      setIsMicrosoftLoading(false)
+    }
   }
-}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4 safe-area-inset">
-        <div className="w-full max-w-md">
+      <div className="w-full max-w-md">
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center gap-2 mb-3 sm:mb-4">
             <div className="p-2 rounded-lg bg-primary/10">
@@ -242,12 +296,12 @@ const handleMicrosoftLogin = async () => {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <svg className="h-4 w-4" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                  <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+                  <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+                  <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
                 </svg>
-              )}       
+              )}
               Sign in with Microsoft
             </Button>
 

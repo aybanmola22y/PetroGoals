@@ -325,9 +325,8 @@ const InitiativeRow = React.memo(
           />
           <div className="flex-1 min-w-0">
             <span
-              className={`whitespace-normal break-words ${
-                initiative.completed ? "line-through text-muted-foreground" : ""
-              }`}
+              className={`whitespace-normal break-words ${initiative.completed ? "line-through text-muted-foreground" : ""
+                }`}
             >
               {initiative.title}
             </span>
@@ -505,7 +504,7 @@ export function OKRCard({
         try {
           const user = JSON.parse(userStr);
           setCurrentUser(user.name || "Demo User");
-        } catch {}
+        } catch { }
       }
     }
   }, []);
@@ -519,11 +518,11 @@ export function OKRCard({
   const overallProgress =
     okr.keyResults.length > 0
       ? Math.round(
-          okr.keyResults.reduce(
-            (acc, kr) => acc + calculateProgress(kr.current, kr.target),
-            0,
-          ) / okr.keyResults.length,
-        )
+        okr.keyResults.reduce(
+          (acc, kr) => acc + calculateProgress(kr.current, kr.target),
+          0,
+        ) / okr.keyResults.length,
+      )
       : 0;
 
   const isAlmostComplete = overallProgress >= 80;
@@ -535,25 +534,25 @@ export function OKRCard({
     })) || [];
 
 
-    // Add this function at the top of your component file or in a utils file
-const getDepartmentColor = (department: string): string => {
-  const colorMap: Record<string, string> = {
-    "Core Business Unit (Operations)": "bg-blue-500 text-white border-blue-600",
-    "Sales & Marketing": "bg-purple-500 text-white border-purple-600",
-    "HR & Admin Department": "bg-pink-500 text-white border-pink-600",
-    "Training Division": "bg-orange-500 text-white border-orange-600",
-    "Accounting & Finance": "bg-emerald-500 text-white border-emerald-600",
-    "Consultancy Division": "bg-cyan-500 text-white border-cyan-600",
-    "Review Division": "bg-indigo-500 text-white border-indigo-600",
-    "HSSEQ Department": "bg-red-500 text-white border-red-600",
-    "Management Team": "bg-amber-500 text-white border-amber-600",
-    "Digital Solutions Division": "bg-teal-500 text-white border-teal-600",
-    "Information Security Department": "bg-slate-700 text-white border-slate-800",
-    "Executive Team": "bg-violet-500 text-white border-violet-600",
+  // Add this function at the top of your component file or in a utils file
+  const getDepartmentColor = (department: string): string => {
+    const colorMap: Record<string, string> = {
+      "Core Business Unit (Operations)": "bg-blue-500 text-white border-blue-600",
+      "Sales & Marketing": "bg-purple-500 text-white border-purple-600",
+      "HR & Admin Department": "bg-pink-500 text-white border-pink-600",
+      "Training Division": "bg-orange-500 text-white border-orange-600",
+      "Accounting & Finance": "bg-emerald-500 text-white border-emerald-600",
+      "Consultancy Division": "bg-cyan-500 text-white border-cyan-600",
+      "Review Division": "bg-indigo-500 text-white border-indigo-600",
+      "HSSEQ Department": "bg-red-500 text-white border-red-600",
+      "Management Team": "bg-amber-500 text-white border-amber-600",
+      "Digital Solutions Division": "bg-teal-500 text-white border-teal-600",
+      "Information Security Department": "bg-slate-700 text-white border-slate-800",
+      "Executive Team": "bg-violet-500 text-white border-violet-600",
+    }
+
+    return colorMap[department] || "bg-gray-500 text-white border-gray-600"
   }
-  
-  return colorMap[department] || "bg-gray-500 text-white border-gray-600"
-}
 
   return (
     <Card
@@ -566,11 +565,11 @@ const getDepartmentColor = (department: string): string => {
           <div className="flex-1 min-w-0 space-y-3 sm:space-y-4 w-full">
             <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 flex-wrap">
               <Badge
-                  variant="secondary"
-                  className={`${getDepartmentColor(okr.department)} backdrop-blur-md font-bold tracking-tight px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg border-2 text-[9px] sm:text-xs whitespace-normal break-words text-left max-w-full`}
-                >
-                  {okr.department}
-                </Badge>
+                variant="secondary"
+                className={`${getDepartmentColor(okr.department)} backdrop-blur-md font-bold tracking-tight px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg border-2 text-[9px] sm:text-xs whitespace-normal break-words text-left max-w-full`}
+              >
+                {okr.department}
+              </Badge>
               <StatusIndicator status={okr.status} />
               {okr.createdBy && (
                 <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 bg-muted/30 rounded-lg border border-border/40">
@@ -738,117 +737,117 @@ const getDepartmentColor = (department: string): string => {
 
             {(chartData.length > 0 ||
               okr.keyResults.some((kr) => kr.targetType === "milestone")) && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-1.5 bg-purple-500 rounded-full" />
-                    <h4 className="text-sm font-black uppercase tracking-widest text-foreground/80">
-                      Show Progress Chart
-                    </h4>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-1.5 bg-purple-500 rounded-full" />
+                      <h4 className="text-sm font-black uppercase tracking-widest text-foreground/80">
+                        Show Progress Chart
+                      </h4>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-full text-[10px] font-black uppercase tracking-widest bg-background/50"
+                      onClick={() => setShowChart(!showChart)}
+                    >
+                      {showChart ? "Hide" : "Show"} Progress
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-full text-[10px] font-black uppercase tracking-widest bg-background/50"
-                    onClick={() => setShowChart(!showChart)}
-                  >
-                    {showChart ? "Hide" : "Show"} Progress
-                  </Button>
-                </div>
 
-                {showChart && (
-                  <div className="p-6 bg-background/40 backdrop-blur-md border border-border/40 rounded-3xl h-[300px] animate-in zoom-in-95 duration-500">
-                    {chartData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                          <defs>
-                            <linearGradient
-                              id="colorValue"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="hsl(var(--primary))"
-                                stopOpacity={0.3}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="hsl(var(--primary))"
-                                stopOpacity={0}
-                              />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            vertical={false}
-                            stroke="hsl(var(--border))"
-                            opacity={0.3}
-                          />
-                          <XAxis
-                            dataKey="date"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              fill: "hsl(var(--muted-foreground))",
-                            }}
-                            dy={10}
-                          />
-                          <YAxis
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              fill: "hsl(var(--muted-foreground))",
-                            }}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(var(--background))",
-                              border: "none",
-                              borderRadius: "1rem",
-                              boxShadow:
-                                "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-                            }}
-                            itemStyle={{
-                              fontWeight: 800,
-                              color: "hsl(var(--primary))",
-                            }}
-                            labelStyle={{
-                              fontWeight: 800,
-                              marginBottom: "0.25rem",
-                            }}
-                          />
-                          <Area
-                            type="monotone"
-                            dataKey="value"
-                            name="Value"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth={4}
-                            fillOpacity={1}
-                            fill="url(#colorValue)"
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-                        <div className="p-4 rounded-full bg-muted/20">
-                          <AreaChart className="h-8 w-8 opacity-20" />
+                  {showChart && (
+                    <div className="p-6 bg-background/40 backdrop-blur-md border border-border/40 rounded-3xl h-[300px] animate-in zoom-in-95 duration-500">
+                      {chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chartData}>
+                            <defs>
+                              <linearGradient
+                                id="colorValue"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.3}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0}
+                                />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                              stroke="hsl(var(--border))"
+                              opacity={0.3}
+                            />
+                            <XAxis
+                              dataKey="date"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                              dy={10}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "hsl(var(--background))",
+                                border: "none",
+                                borderRadius: "1rem",
+                                boxShadow:
+                                  "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+                              }}
+                              itemStyle={{
+                                fontWeight: 800,
+                                color: "hsl(var(--primary))",
+                              }}
+                              labelStyle={{
+                                fontWeight: 800,
+                                marginBottom: "0.25rem",
+                              }}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="value"
+                              name="Value"
+                              stroke="hsl(var(--primary))"
+                              strokeWidth={4}
+                              fillOpacity={1}
+                              fill="url(#colorValue)"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                          <div className="p-4 rounded-full bg-muted/20">
+                            <AreaChart className="h-8 w-8 opacity-20" />
+                          </div>
+                          <p className="text-xs font-bold uppercase tracking-widest opacity-40">
+                            Intelligence Gathering In Progress
+                          </p>
                         </div>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-40">
-                          Intelligence Gathering In Progress
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         )}
       </CardContent>
