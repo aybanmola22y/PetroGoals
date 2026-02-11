@@ -147,13 +147,10 @@ function CheckInItem({ checkIn }: { checkIn: CheckIn }) {
 
         {/* Clean Content Layout */}
         <div className="flex-1 min-w-0 flex flex-col gap-1">
-          {/* Header Row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[14px] text-slate-900 dark:text-slate-100">
-                {checkIn.userName}
-              </span>
-            </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold text-[14px] text-slate-900 dark:text-slate-100">
+              {checkIn.userName}
+            </span>
             <time className="text-[10px] text-slate-400 font-medium">
               {formatDateTime(checkIn.createdAt)}
             </time>
