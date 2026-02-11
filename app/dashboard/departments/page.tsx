@@ -345,17 +345,8 @@ export default function DepartmentsPage() {
         return okr
       }))
 
-      // Then update server
-      const okr = store.getOKRById(okrId)
-      if (okr) {
-        const updatedInitiatives = okr.initiatives.map(init =>
-          init.id === initiativeId ? { ...init, completed } : init
-        )
-        await store.updateOKR(okrId, {
-          initiatives: updatedInitiatives,
-          strategicPillar: okr.strategicPillar
-        })
-      }
+      // Then update server using the dedicated granular method
+      await store.toggleInitiative(okrId, initiativeId, completed)
     } catch (error) {
       // Rollback on error
       loadOKRs()

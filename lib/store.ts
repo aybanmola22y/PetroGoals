@@ -1,7 +1,7 @@
 // lib\store.ts
 "use client"
 
-import { OKR, CheckIn, User, CompanyInfo, Department, DEPARTMENTS, Comment, Notification, KeyResult, MilestoneStage, OKRStatus } from "@/types/okr"
+import { OKR, CheckIn, User, CompanyInfo, Department, DEPARTMENTS, Comment, Notification, KeyResult, MilestoneStage, OKRStatus, Initiative } from "@/types/okr"
 import { supabase, isConnected } from "./supabase"
 import { toast } from "sonner"
 
@@ -233,6 +233,14 @@ class Store {
         return
       }
 
+      // Fetch users to get profile pictures
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, profile_picture, name')
+
+      const userMap = new Map((users || []).map(u => [u.id, u.profile_picture]))
+      const nameMap = new Map((users || []).map(u => [u.name, u.profile_picture]))
+
       this.checkIns = (data || []).map(checkIn => ({
         id: checkIn.id,
         okrId: checkIn.okr_id,
@@ -241,6 +249,7 @@ class Store {
         userName: checkIn.user_name,
         department: checkIn.department as Department,
         message: checkIn.message,
+        userProfilePicture: userMap.get(checkIn.user_id) || nameMap.get(checkIn.user_name) || undefined,
         keyResultUpdates: (checkIn.check_in_key_result_updates || []).map((u: any) => ({
           keyResultId: u.key_result_id,
           keyResultTitle: u.key_result_title,
@@ -588,27 +597,81 @@ class Store {
       }
 
       if (updates.initiatives) {
-        await supabase.from('initiatives').delete().eq('okr_id', id)
+        // Get existing initiative IDs for this OKR
+        const { data: existingInits } = await supabase
+          .from('initiatives')
+          .select('id')
+          .eq('okr_id', id)
+
+        const existingIds = new Set((existingInits || []).map(i => i.id))
+        const updatedIds = new Set(updates.initiatives.map(i => i.id).filter(id => id && !id.startsWith('temp-')))
+
+        // Delete initiatives that are no longer present
+        const idsToDelete = Array.from(existingIds).filter(id => !updatedIds.has(id))
+        if (idsToDelete.length > 0) {
+          await supabase.from('initiatives').delete().in('id', idsToDelete)
+        }
+
         for (const init of updates.initiatives) {
-          await supabase.from('initiatives').insert({
+          const isNew = !init.id || init.id.startsWith('temp-')
+          const initData = {
             okr_id: id,
             title: init.title,
             completed: init.completed,
             assignee: init.assignee,
             deadline: init.deadline
-          })
+          }
+
+          if (isNew) {
+            await supabase.from('initiatives').insert(initData)
+          } else {
+            await supabase.from('initiatives').update(initData).eq('id', init.id)
+          }
         }
       }
+
+      const previousInits = this.okrs.find(o => o.id === id)?.initiatives
 
       await this.fetchOKRs()
       const updatedOKR = this.okrs.find(o => o.id === id)
       if (updatedOKR) {
-        await this.sendInitiativeNotifications(updatedOKR)
+        await this.sendInitiativeNotifications(updatedOKR, previousInits)
       }
       toast.success("OKR updated successfully!")
       return updatedOKR
     } catch (error) {
       toast.error("Failed to update OKR")
+      throw error
+    }
+  }
+
+  async toggleInitiative(okrId: string, initiativeId: string, completed: boolean): Promise<void> {
+    try {
+      if (this.demoMode || !supabase) {
+        const okr = this.okrs.find(o => o.id === okrId)
+        if (okr) {
+          const init = okr.initiatives.find(i => i.id === initiativeId)
+          if (init) init.completed = completed
+        }
+        return
+      }
+
+      const { error } = await supabase
+        .from('initiatives')
+        .update({ completed })
+        .eq('id', initiativeId)
+
+      if (error) throw error
+
+      // Update local state without full fetch to avoid duplication during rapid clicks
+      const okr = this.okrs.find(o => o.id === okrId)
+      if (okr) {
+        const initiative = okr.initiatives.find(i => i.id === initiativeId)
+        if (initiative) initiative.completed = completed
+      }
+    } catch (error) {
+      console.error('Error toggling initiative:', error)
+      toast.error("Failed to update initiative")
       throw error
     }
   }
@@ -741,7 +804,8 @@ class Store {
         const newCheckIn: CheckIn = {
           id: `checkin-${Date.now()}`,
           ...checkIn,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          userProfilePicture: this.currentUser?.profilePicture
         }
         this.checkIns.unshift(newCheckIn)
 
@@ -1176,11 +1240,19 @@ class Store {
     }
   }
 
-  private async sendInitiativeNotifications(okr: OKR) {
+  private async sendInitiativeNotifications(okr: OKR, previousInitiatives?: Initiative[]) {
     const appUrl = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5000"
 
     for (const initiative of okr.initiatives) {
       if (initiative.assignee) {
+        // Only send if it's a new initiative or the assignee has changed
+        if (previousInitiatives) {
+          const prevInit = previousInitiatives.find(i => i.id === initiative.id)
+          if (prevInit && prevInit.assignee === initiative.assignee) {
+            continue // Assignee didn't change, skip email
+          }
+        }
+
         const user = this.users.find(u => u.name === initiative.assignee)
         if (user && user.email) {
           const okrLink = `${appUrl}/dashboard/departments?okrId=${okr.id}`
