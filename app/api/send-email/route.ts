@@ -48,10 +48,11 @@ export async function POST(req: Request) {
         console.log('Message sent: %s', info.messageId)
 
         return NextResponse.json({ success: true, messageId: info.messageId })
-    } catch (error: any) {
+    } catch (error: unknown) {
+        // Log the full error server-side for debugging, but never expose it to the client
         console.error('Error sending email:', error)
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to send email' },
+            { success: false, error: 'An internal error occurred while sending the email.' },
             { status: 500 }
         )
     }

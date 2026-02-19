@@ -6,6 +6,23 @@ const PROTECTED_ROUTES = ['/dashboard']
 // Routes that should redirect authenticated users away (e.g., back to dashboard)
 const AUTH_ROUTES = ['/login']
 
+// Security headers applied to every middleware response (including redirects)
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+}
+
+/** Attach security headers to any NextResponse */
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value)
+  }
+  return response
+}
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const authToken = request.cookies.get('auth_token')?.value
@@ -17,17 +34,17 @@ export function middleware(request: NextRequest) {
     const loginUrl = new URL('/login', request.url)
     // Preserve the original URL so the user can be redirected back after login
     loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+    return applySecurityHeaders(NextResponse.redirect(loginUrl))
   }
 
   // Redirect already-authenticated users away from auth pages
   const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route))
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return applySecurityHeaders(NextResponse.redirect(new URL('/dashboard', request.url)))
   }
 
   // Allow the request to proceed
-  return NextResponse.next()
+  return applySecurityHeaders(NextResponse.next())
 }
 
 // Configure which routes to apply middleware to

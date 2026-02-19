@@ -37,6 +37,13 @@ const nextConfig = {
           },
           // Prevent MIME type sniffing
           { key: "X-Content-Type-Options", value: "nosniff" },
+          // Force HTTPS for all future requests (2-year max-age)
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          // Legacy XSS protection for older browsers
+          { key: "X-XSS-Protection", value: "1; mode=block" },
           // Control referrer information sent with requests
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Restrict access to browser features
