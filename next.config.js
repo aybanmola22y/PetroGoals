@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -14,6 +15,11 @@ const nextConfig = {
         source: "/:path*",
         headers: [
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          // CORS: restrict to production domain only (no wildcard *)
+          { key: "Access-Control-Allow-Origin", value: "https://petrogoals.petrosphere.co" },
+          // Suppress server identity headers to reduce info leakage
+          { key: "Server", value: "" },
+          { key: "X-Powered-By", value: "" },
           // Anti-Clickjacking: prevent the page from being embedded in iframes
           { key: "X-Frame-Options", value: "DENY" },
           // Content Security Policy: restrict framing and control content sources
