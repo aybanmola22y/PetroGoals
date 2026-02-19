@@ -14,6 +14,30 @@ const nextConfig = {
         source: "/:path*",
         headers: [
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          // Anti-Clickjacking: prevent the page from being embedded in iframes
+          { key: "X-Frame-Options", value: "DENY" },
+          // Content Security Policy: restrict framing and control content sources
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+          // Prevent MIME type sniffing
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Control referrer information sent with requests
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Restrict access to browser features
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=()",
+          },
         ],
       },
     ];

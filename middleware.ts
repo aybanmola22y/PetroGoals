@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Routes that require a valid auth token
+const PROTECTED_ROUTES = ['/dashboard']
+
+// Routes that should redirect authenticated users away (e.g., back to dashboard)
+const AUTH_ROUTES = ['/login']
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const authToken = request.cookies.get('auth_token')?.value
+  const isAuthenticated = Boolean(authToken && authToken.trim().length > 0)
 
-  // List of protected routes that require authentication
-  const protectedRoutes = ['/dashboard']
-  
-  // Check if the current route is protected
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  // Redirect unauthenticated users trying to access protected routes
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
+  if (isProtectedRoute && !isAuthenticated) {
+    const loginUrl = new URL('/login', request.url)
+    // Preserve the original URL so the user can be redirected back after login
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
 
-  if (isProtectedRoute) {
-    // Check for auth token in cookies
-    const authToken = request.cookies.get('auth_token')?.value
-
-    if (!authToken) {
-      // Redirect to login if no auth token
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  // Redirect already-authenticated users away from auth pages
+  const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route))
+  if (isAuthRoute && isAuthenticated) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Allow the request to proceed

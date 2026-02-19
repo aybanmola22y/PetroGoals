@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { store } from "@/lib/store"
 import {
   downloadCSV,
@@ -27,13 +27,13 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   const [currentUser, setCurrentUser] = React.useState(store.getCurrentUser())
-  
+
   // Profile form
   const [name, setName] = React.useState(currentUser?.name || "")
   const [email, setEmail] = React.useState(currentUser?.email || "")
   const [isSavingProfile, setIsSavingProfile] = React.useState(false)
   const [profileSaved, setProfileSaved] = React.useState(false)
-  
+
   // Password form
   const [currentPassword, setCurrentPassword] = React.useState("")
   const [newPassword, setNewPassword] = React.useState("")
@@ -41,7 +41,7 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = React.useState("")
   const [isSavingPassword, setIsSavingPassword] = React.useState(false)
   const [passwordSaved, setPasswordSaved] = React.useState(false)
-  
+
   const [isExporting, setIsExporting] = React.useState(false)
   const [exportComplete, setExportComplete] = React.useState(false)
 
@@ -59,9 +59,9 @@ export default function SettingsPage() {
     e.preventDefault()
     setIsSavingProfile(true)
     setProfileSaved(false)
-    
+
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // Update in-memory user (demo only)
     if (currentUser) {
       const updatedUser = { ...currentUser, name, email }
@@ -69,7 +69,7 @@ export default function SettingsPage() {
       localStorage.setItem("user", JSON.stringify(updatedUser))
       setCurrentUser(updatedUser)
     }
-    
+
     setIsSavingProfile(false)
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2000)
@@ -79,25 +79,25 @@ export default function SettingsPage() {
     e.preventDefault()
     setPasswordError("")
     setPasswordSaved(false)
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError("Passwords do not match")
       return
     }
-    
+
     if (newPassword.length < 6) {
       setPasswordError("Password must be at least 6 characters")
       return
     }
-    
+
     setIsSavingPassword(true)
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // In a real app, this would update the password in the database
     setCurrentPassword("")
     setNewPassword("")
     setConfirmPassword("")
-    
+
     setIsSavingPassword(false)
     setPasswordSaved(true)
     setTimeout(() => setPasswordSaved(false), 2000)
@@ -106,7 +106,7 @@ export default function SettingsPage() {
   const handleExportAll = async () => {
     setIsExporting(true)
     setExportComplete(false)
-    
+
     try {
       downloadAllDataAsZip()
       await new Promise(resolve => setTimeout(resolve, 800))
@@ -115,13 +115,13 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("Export failed:", error)
     }
-    
+
     setIsExporting(false)
   }
 
   const handleExportSingle = (type: string) => {
     const timestamp = new Date().toISOString().split("T")[0]
-    
+
     switch (type) {
       case "okrs":
         downloadCSV(`okrs_${timestamp}.csv`, exportOKRsToCSV())
@@ -175,6 +175,9 @@ export default function SettingsPage() {
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="flex items-center gap-4 mb-6">
                 <Avatar className="h-16 w-16">
+                  {currentUser?.profilePicture ? (
+                    <AvatarImage src={currentUser.profilePicture} alt={name} />
+                  ) : null}
                   <AvatarFallback className="text-xl bg-primary/10 text-primary">
                     {initials}
                   </AvatarFallback>
@@ -184,7 +187,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">{email}</p>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -195,7 +198,7 @@ export default function SettingsPage() {
                   data-testid="input-name"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -207,7 +210,7 @@ export default function SettingsPage() {
                   data-testid="input-email"
                 />
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button type="submit" disabled={isSavingProfile} data-testid="button-save-profile">
                   {isSavingProfile ? (
@@ -251,7 +254,7 @@ export default function SettingsPage() {
                   data-testid="input-current-password"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
                 <Input
@@ -263,7 +266,7 @@ export default function SettingsPage() {
                   data-testid="input-new-password"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm New Password</Label>
                 <Input
@@ -275,13 +278,13 @@ export default function SettingsPage() {
                   data-testid="input-confirm-password"
                 />
               </div>
-              
+
               {passwordError && (
                 <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
                   {passwordError}
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2">
                 <Button type="submit" disabled={isSavingPassword} data-testid="button-change-password">
                   {isSavingPassword ? (
@@ -330,15 +333,14 @@ export default function SettingsPage() {
                   />
                 )}
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setTheme("light")}
-                  className={`p-4 rounded-lg border-2 transition-colors ${
-                    theme === "light" ? "border-primary" : "border-transparent"
-                  }`}
+                  className={`p-4 rounded-lg border-2 transition-colors ${theme === "light" ? "border-primary" : "border-transparent"
+                    }`}
                   data-testid="button-theme-light"
                 >
                   <div className="h-20 rounded bg-white border mb-2" />
@@ -346,9 +348,8 @@ export default function SettingsPage() {
                 </button>
                 <button
                   onClick={() => setTheme("dark")}
-                  className={`p-4 rounded-lg border-2 transition-colors ${
-                    theme === "dark" ? "border-primary" : "border-transparent"
-                  }`}
+                  className={`p-4 rounded-lg border-2 transition-colors ${theme === "dark" ? "border-primary" : "border-transparent"
+                    }`}
                   data-testid="button-theme-dark"
                 >
                   <div className="h-20 rounded mb-2" style={{ backgroundColor: "#0a1628" }} />

@@ -1,9 +1,29 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { z } from 'zod'
+
+// Zod schema to validate and sanitize the incoming request body
+const emailSchema = z.object({
+    to: z.string().email({ message: "Invalid recipient email address" }),
+    subject: z.string().min(1, { message: "Subject cannot be empty" }).max(200),
+    text: z.string().optional(),
+    html: z.string().optional(),
+})
 
 export async function POST(req: Request) {
     try {
-        const { to, subject, text, html } = await req.json()
+        const body = await req.json()
+
+        // Validate the request body against the schema
+        const result = emailSchema.safeParse(body)
+        if (!result.success) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid request data', details: result.error.flatten() },
+                { status: 400 }
+            )
+        }
+
+        const { to, subject, text, html } = result.data
 
         // Create a transporter using SMTP settings
         const transporter = nodemailer.createTransport({

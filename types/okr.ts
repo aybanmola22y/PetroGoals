@@ -123,6 +123,7 @@ export interface CheckIn {
   userName: string
   department: Department
   message: string
+  userProfilePicture?: string
   keyResultUpdates?: {
     keyResultId: string
     keyResultTitle: string
